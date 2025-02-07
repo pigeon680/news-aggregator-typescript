@@ -5,7 +5,7 @@ interface NewsCardProps {
   article: Article;
 }
 const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
-    console.log(article.source);
+    console.log(article);
   return (
     <div className="border p-4 rounded-lg shadow-lg mb-6 transition-transform hover:scale-105">
       <img

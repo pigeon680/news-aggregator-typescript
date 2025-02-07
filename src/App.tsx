@@ -10,36 +10,47 @@ const App = () => {
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [sources, setSources] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("general"); // Default category
 
   useEffect(() => {
     const fetchNews = async () => {
       const urls = [
-        // `https://newsapi.org/v2/top-headlines?apiKey=${API_KEYS.NEWS_API}`,
-        // `https://gnews.io/api/v4/top-headlines?token=${API_KEYS.GNEWS_API}`
-        `https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=${API_KEYS.NEWS_API}`,
-        `https://newsapi.org/v2/everything?q=technology&from=2025-01-06&sortBy=publishedAt&apiKey=${API_KEYS.NEWS_API}`,
-        // `https://gnews.io/api/v4/top-headlines?category=technology&lang=en&country=us&token=${API_KEYS.GNEWS_API}`
-        // `https://opennewsapi.com/v1/articles?apiKey=${API_KEYS.OPENNEWS_API}`,
-        // `https://bbc-news-api.com/v1/articles?apiKey=${API_KEYS.BBC_API}`
+        {
+          url:`https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=${API_KEYS.BBC_API}`,
+          source: "BBC News"
+        },
+        {
+          url: `https://newsapi.org/v2/top-headlines?category=${selectedCategory}&apiKey=${API_KEYS.NEWS_API}`,
+          source: "OpenNews"
+        },
+        {
+          url: `https://gnews.io/api/v4/top-headlines?category=${selectedCategory}&token=${API_KEYS.GNEWS_API}`,
+          source: "GNEWS"
+        }
       ];
 
       try {
-        const responses = await Promise.all(urls.map(url => fetch(url)));
+        const responses = await Promise.all(urls.map(urlObj => fetch(urlObj.url)));
         const data = await Promise.all(responses.map(res => res.json()));
-        const allArticles = data.flatMap((d, index) =>
-          d.articles.map((article: any) => ({
-            title: article.title,
-            description: article.description,
-            url: article.url,
+        console.log(data);
+        const allArticles = data.flatMap((d, index) => {
+          if (!d.articles && !d.results) return [];
+
+          const articles = d.articles || d.results;
+
+          return articles.map((article: any) => ({
+            title: article.title || article.headline?.main || "No Title",
+            description: article.description || article.abstract || "No Description",
+            url: article.url || article.web_url,
             urlToImage: article.urlToImage,
-            source: index === 0 ? "NewsAPI" : index === 1 ? "OpenNews" : "BBC News",
-            category: article.category || "General",
-            publishedAt: article.publishedAt || new Date().toISOString(),
-          }))
-        );
+            source: urls[index].source,
+            category: selectedCategory,
+            publishedAt: article.publishedAt || article.pub_date || new Date().toISOString(),
+          }));
+        });
         setArticles(allArticles);
         setFilteredArticles(allArticles);
-        setCategories(Array.from(new Set(allArticles.map(a => a.category))));
+        setCategories(["general", "business", "entertainment", "health", "science", "sports", "technology"]);
         setSources(Array.from(new Set(allArticles.map(a => a.source))));
       } catch (error) {
         console.error("Error fetching news:", error);
@@ -47,12 +58,25 @@ const App = () => {
     };
 
     fetchNews();
-  }, []);
+  }, [selectedCategory]);
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold text-center mb-4">News Aggregator</h1>
 {/* <Preferences onSave={(prefs) => console.log('User Preferences:', prefs)} /> */}
+      {/* <div className="mb-4 text-center"> */}
+        {/* <label htmlFor="category" className="font-bold mr-2">Select Category:</label> */}
+        <select 
+          id="category" 
+          value={selectedCategory} 
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border p-2 rounded w-52"
+        >
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+          ))}
+        </select>
+      {/* </div> */}
       <NewsFilter 
         articles={articles} 
         setFilteredArticles={setFilteredArticles} 

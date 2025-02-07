@@ -53,15 +53,15 @@ const NewsFilter = ({ articles, setFilteredArticles, categories, sources }: News
       </select>
 
       {/* Filter by Category */}
-      <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); }} className="border p-2 rounded w-52">
+      {/* <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); }} className="border p-2 rounded w-52">
         <option value="all">All Categories</option>
         {categories.map((category) => (
           <option key={category} value={category}>
             {category}
           </option>
         ))}
-      </select>
-
+      </select> */}
+      
       {/* Search by Keyword */}
       <input
         type="text"
